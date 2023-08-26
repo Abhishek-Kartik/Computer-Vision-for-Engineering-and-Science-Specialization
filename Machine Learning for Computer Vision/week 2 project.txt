@@ -1,0 +1,32 @@
+% Paste your code from "predictUnlabeledGroundCoverImage.mlx" here:
+hsvImg = rgb2hsv(img);
+saturation = hsvImg(:,:,2);
+avgSat = mean(saturation(:))
+stdSat = std(saturation(:))
+gcTableSaturation = table(avgSat, stdSat)
+predictionSaturation = gcClassifierSaturation.predictFcn(gcTableSaturation)
+gcTableSaturation.prediction = predictionSaturation
+
+
+% Encode the unlabeled image using the bag of visual words object
+features = encode(bag, img)
+
+% Create a table of predictor features for the unlabeled image
+gcTableBag = array2table(features, 'VariableNames', strcat('f', string(1:500)))
+
+
+% Use gcClassifierBag to predict the label
+predictionBag = gcClassifierBag.predictFcn(gcTableBag);
+
+% Attach the prediction to gcTableBag as a new variable
+gcTableBag.prediction = predictionBag;
+
+
+% Step 4: Use gcClassifierBag.predictFcn to classify the unlabeled image
+predictionBag = gcClassifierBag.predictFcn(gcTableBag)
+
+% Attach the prediction to gcTableBag as a new variable
+gcTableBag.prediction = predictionBag
+
+% Display the prediction
+disp(gcTableBag)
