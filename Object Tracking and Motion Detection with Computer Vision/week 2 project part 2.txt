@@ -1,0 +1,66 @@
+frame1 = imread("Rt9Frame1.png");
+frame2 = imread("Rt9Frame2.png");
+
+% Paste your solution code from "Project: Applying Optical Flow to Detect Moving Objects" here:
+% Load the frames (frame1 and frame2) and apply optical flow
+frame1 = imread("Rt9Frame1.png");
+frame2 = imread("Rt9Frame2.png");
+
+frame1 = im2double(frame1);
+frame2 = im2double(frame2);
+
+myOpticalFlow = opticalFlowFarneback;
+estimateFlow(myOpticalFlow, im2gray(frame1));
+flow = estimateFlow(myOpticalFlow, im2gray(frame2));
+
+% Creating Mask with optical flow magnitude threshold
+vm = flow.Magnitude;
+maskThreshold = 1.0;
+mask = (vm(: , :) > maskThreshold);
+
+% Perform image processing to refine the mask
+se = strel("disk", 20, 0);
+mask = bwareafilt(mask, [500, inf]);
+mask = imclose(mask, se);
+
+% Calculate labeled image for regionprops
+labeledImage = bwlabel(mask);
+
+% Calculate the average x-velocity for each object in the mask
+maskedVx = flow.Vx .* mask;
+
+% Calculate average x-velocity for each object using regionprops
+movObjs = regionprops(labeledImage, maskedVx, 'MeanIntensity');
+
+% Initialize variables for cars driving left and right
+leftVx = [];
+rightVx = [];
+
+% Loop through detected objects and classify based on velocity and direction
+for i = 1:length(movObjs)
+    avgVx = movObjs(i).MeanIntensity;
+    
+    % Determine direction of the object based on average velocity
+    if avgVx < -3 % Use negative threshold for left-moving cars
+        leftVx = [leftVx, avgVx]; % Car moving left
+    elseif avgVx > 3
+        rightVx = [rightVx, avgVx]; % Car moving right
+    end
+end
+
+% Calculate the number of cars moving in each direction
+numCarsLeft = length(leftVx);
+numCarsRight = length(rightVx);
+
+% Display results
+disp(['Number of cars driving left: ', num2str(numCarsLeft)]);
+disp(['Number of cars driving right: ', num2str(numCarsRight)]);
+
+% Display left-moving velocities
+disp('Left-moving velocities:');
+disp(leftVx);
+
+% Display right-moving velocities
+disp('Right-moving velocities:');
+disp(rightVx);
+

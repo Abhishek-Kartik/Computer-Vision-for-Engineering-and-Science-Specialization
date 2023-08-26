@@ -1,0 +1,13 @@
+frame1 = imread("Rt9Frame1.png");
+frame2 = imread("Rt9Frame2.png");
+
+of = opticalFlowFarneback;
+flow = estimateFlow(of, im2gray(frame1));
+flow = estimateFlow(of, im2gray(frame2)); 
+mask = flow.Magnitude > 1;
+mask = bwareafilt(mask, [500, Inf]);
+se = strel("disk", 20, 0);
+mask = imclose(mask, se);
+maskedFrame = frame2;
+maskedFrame(repmat(~mask,[1 1 3])) = 0;
+imshow(maskedFrame)
